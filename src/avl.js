@@ -4,7 +4,16 @@ export default class Node {
         this.parent = null;
         this.leftChildren = null;
         this.rightChildren = null;
-        this.height = 1;
+    }
+    get height() {
+        const heightOfLeft = this.leftChildren === null ? 0 : this.leftChildren.height;
+        const heightOfRight = this.rightChildren === null ? 0 : this.rightChildren.height;
+        return Math.max(heightOfLeft, heightOfRight) + 1;
+    }
+    get balanceFactor() {
+        const heightOfLeft = this.leftChildren === null ? 0 : this.leftChildren.height;
+        const heightOfRight = this.rightChildren === null ? 0 : this.rightChildren.height;
+        return heightOfLeft - heightOfRight;
     }
     search(val) {
         if (this.value === val) return this;
@@ -36,26 +45,13 @@ export default class Node {
                 this.rightChildren.insert(val);
             }
         }
-        let heightOfLeft = this.leftChildren === null ? 0 : this.leftChildren.height;
-        let heightOfRight = this.rightChildren === null ? 0 : this.rightChildren.height;
-        const balanceFactor = heightOfLeft - heightOfRight;
-        if (balanceFactor >= 2) {
-            const heightOfLeft = this.leftChildren.leftChildren === null ? 0 : this.leftChildren.leftChildren.height;
-            const heightOfRight = this.leftChildren.rightChildren === null ? 0 : this.leftChildren.rightChildren.height;
-            const balanceFactor = heightOfLeft - heightOfRight;
-            if (balanceFactor < 0) this.leftChildren.leftRotate();
-            console.log(this.leftChildren.value, this.leftChildren.leftChildren.value);
+        if (this.balanceFactor >= 2) {
+            if (this.leftChildren.balanceFactor < 0) this.leftChildren.leftRotate();
             this.rightRotate();
-        } else if (-2 >= balanceFactor) {
-            const heightOfLeft = this.rightChildren.leftChildren === null ? 0 : this.rightChildren.leftChildren.height;
-            const heightOfRight = this.rightChildren.rightChildren === null ? 0 : this.rightChildren.rightChildren.height;
-            const balanceFactor = heightOfLeft - heightOfRight;
-            if (balanceFactor > 0) this.rightChildren.rightRotate();
+        } else if (-2 >= this.balanceFactor) {
+            if (this.rightChildren.balanceFactor > 0) this.rightChildren.rightRotate();
             this.leftRotate();
         }
-        heightOfLeft = this.leftChildren === null ? 0 : this.leftChildren.height;
-        heightOfRight = this.rightChildren === null ? 0 : this.rightChildren.height;
-        this.height = Math.max(heightOfLeft, heightOfRight) + 1;
     }
     leftRotate() {
         this.rotate('rightChildren', 'leftChildren');
