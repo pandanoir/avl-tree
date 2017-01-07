@@ -1,0 +1,23 @@
+{
+  "name": "avl-tree",
+  "version": "0.0.1",
+  "description": "AVL tree in JS",
+  "main": "dist/avl.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "preversion": "npm test",
+    "version": "npm run build && gulp && git add -A",
+    "postversion": "git push && git push --tags",
+    "pretest": "npm run build",
+    "test": "mocha -R spec",
+    "build": "rollup src/avl.js -c -o dist/avl.js --name AVL"
+  },
+  "author": "Naoto Ikuno <moon_in_france@yahoo.co.jp>",
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "3.2.0",
+    "rollup": "0.40.2"
+  }
+}
