@@ -61,16 +61,75 @@ export default class Node {
             }
             target = targetHistory.pop();
         }
+    }
+    delete(val) {
+        let target = this;
+        const targetHistory = [this];
+        while (target.value !== val) {
+            if (target.value > val) {
+                if (target.leftChildren !== null) target = target.leftChildren;
+                else return;
+            }
+            if (target.value < val) {
+                if (target.rightChildren !== null) target = target.rightChildren;
+                else return;
+            }
+            targetHistory.push(target);
+        }
+        const hasLeft = target.leftChildren != null;
+        const hasRight = target.rightChildren != null;
+        if (!hasLeft && !hasRight) {
+            const targetParent = targetHistory[targetHistory.length - 2];
+            if (targetParent.rightChildren == target) {
+                targetParent.rightChildren = null;
+            } else if (targetParent.leftChildren == target) {
+                targetParent.leftChildren = null;
+            }
+        } else if (hasLeft != hasRight) {
+            // hasLeft XOR hasRight
+            const targetParent = targetHistory[targetHistory.length - 2];
+            if (hasLeft) {
+                if (targetParent.rightChildren == target) {
+                    targetParent.rightChildren = target.leftChildren;
+                } else if (targetParent.leftChildren == target) {
+                    targetParent.leftChildren = target.leftChildren;
+                }
             } else {
-                this.rightChildren.insert(val);
+                if (targetParent.rightChildren == target) {
+                    targetParent.rightChildren = target.rightChildren;
+                } else if (targetParent.leftChildren == target) {
+                    targetParent.leftChildren = target.rightChildren;
+                }
+            }
+        } else {
+            let max = target.leftChildren;
+            if (max.rightChildren == null) {
+                target.value = max.value;
+                target.leftChildren = max.leftChildren;
+            } else {
+                while (max.rightChildren != null) {
+                    targetHistory.push(max);
+                    max = max.rightChildren;
+                }
+                target.value = max.value;
+                max.value = null;
+                targetHistory[targetHistory.length - 1].rightChildren = max.leftChildren;
             }
         }
-        if (this.balanceFactor >= 2) {
-            if (this.leftChildren.balanceFactor < 0) this.leftChildren.leftRotate();
-            this.rightRotate();
-        } else if (-2 >= this.balanceFactor) {
-            if (this.rightChildren.balanceFactor > 0) this.rightChildren.rightRotate();
-            this.leftRotate();
+        target = targetHistory.pop();
+        let balanceFactor = target.balanceFactor;
+        while (target != null && balanceFactor != 1 && balanceFactor != -1) {
+            balanceFactor = target.balanceFactor;
+            if (balanceFactor >= 2) {
+                if (target.leftChildren.balanceFactor < 0) target.leftChildren.leftRotate();
+                target.rightRotate();
+                break;
+            } else if (-2 >= balanceFactor) {
+                if (target.rightChildren.balanceFactor > 0) target.rightChildren.rightRotate();
+                target.leftRotate();
+                break;
+            }
+            target = targetHistory.pop();
         }
     }
     leftRotate() {
