@@ -1,7 +1,6 @@
 export default class Node {
     constructor(val) {
         this.value = val;
-        this.parent = null;
         this.leftChildren = null;
         this.rightChildren = null;
     }
@@ -27,20 +26,41 @@ export default class Node {
         }
     }
     insert(val) {
-        if (this.value > val) {
-            if (this.leftChildren === null) {
-                const children = new Node(val);
-                children.parent = this;
-                this.leftChildren = children;
+        const targetHistory = [this];
+        let target = this;
+        while (target != null) {
+            if (target.value > val) {
+                if (target.leftChildren === null) {
+                    const children = new Node(val);
+                    target.leftChildren = children;
+                    break;
+                }
+                target = target.leftChildren;
             } else {
-                this.leftChildren.insert(val);
+                // target.value <= val
+                if (target.rightChildren === null) {
+                    const children = new Node(val);
+                    target.rightChildren = children;
+                    break;
+                }
+                target = target.rightChildren;
             }
+            targetHistory.push(target);
         }
-        if (this.value <= val) {
-            if (this.rightChildren === null) {
-                const children = new Node(val);
-                children.parent = this;
-                this.rightChildren = children;
+        let balanceFactor = target.balanceFactor;
+        while (target != null && balanceFactor != 0) {
+            balanceFactor = target.balanceFactor;
+            if (balanceFactor >= 2) {
+                if (target.leftChildren.balanceFactor < 0) target.leftChildren.leftRotate();
+                target.rightRotate();
+                break;
+            } else if (-2 >= balanceFactor) {
+                if (target.rightChildren.balanceFactor > 0) target.rightChildren.rightRotate();
+                target.leftRotate();
+                break;
+            }
+            target = targetHistory.pop();
+        }
             } else {
                 this.rightChildren.insert(val);
             }
@@ -61,18 +81,17 @@ export default class Node {
     }
     rotate(OS, RS) {
         const pivot = this[OS];
-        const root = this;
-        root[OS] = pivot[RS];
-        if (pivot[RS] !== null) pivot[RS].parent = root;
-        pivot[RS] = new Node(root.value);
-        pivot[RS].leftChildren = root.leftChildren;
-        pivot[RS].rightChildren = root.rightChildren;
-        pivot[RS].parent = pivot;
-        pivot.parent = root.parent;
 
-        root.leftChildren = pivot.leftChildren;
-        root.rightChildren = pivot.rightChildren;
-        root.value = pivot.value;
-        root.parent = pivot.parent;
+        this[OS] = pivot[RS];
+
+        const pivotRS = new Node(this.value);
+        pivotRS.leftChildren = this.leftChildren;
+        pivotRS.rightChildren = this.rightChildren;
+
+        pivot[RS] = pivotRS;
+
+        this.leftChildren = pivot.leftChildren;
+        this.rightChildren = pivot.rightChildren;
+        this.value = pivot.value;
     }
 }
