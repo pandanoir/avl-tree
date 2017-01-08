@@ -11,7 +11,61 @@ const balance = target => {
     }
     return false;
 };
-export default class Node {
+export default class AVL {
+    constructor() {
+        this.root = null;
+    }
+    insert(val) {
+        if (this.root == null) {
+            this.root = new Node(val);
+        } else {
+            this.root.insert(val);
+        }
+    }
+    delete(val) {
+        if (this.root == null) return null;
+        if (this.root.value === val) {
+            let target = this.root;
+            const targetHistory = [this.root];
+            const hasLeft = target.leftChildren != null;
+            const hasRight = target.rightChildren != null;
+            if (!hasLeft && !hasRight) {
+                this.root = null;
+                return;
+            } else if (hasLeft != hasRight) {
+                // hasLeft XOR hasRight
+                const child = hasLeft ? 'leftChildren' : 'rightChildren';
+                this.root = target[child];
+                return;
+            } else {
+                let max = target.leftChildren;
+                if (max.rightChildren == null) {
+                    target.value = max.value;
+                    target.leftChildren = max.leftChildren;
+                } else {
+                    while (max.rightChildren != null) {
+                        targetHistory.push(max);
+                        max = max.rightChildren;
+                    }
+                    target.value = max.value;
+                    max.value = null;
+                    targetHistory[targetHistory.length - 1].rightChildren = max.leftChildren;
+                }
+            }
+            target = targetHistory.pop();
+            let balanceFactor = target.balanceFactor;
+            while (target != null && balanceFactor != 1 && balanceFactor != -1) {
+                balance(target);
+                target = targetHistory.pop();
+            }
+        } else this.root.delete(val);
+    }
+    search(val) {
+        if (this.root == null) return null;
+        return this.root.search(val);
+    }
+}
+class Node {
     constructor(val) {
         this.value = val;
         this.leftChildren = null;
@@ -80,12 +134,12 @@ export default class Node {
         } else if (hasLeft != hasRight) {
             // hasLeft XOR hasRight
             const targetParent = targetHistory[targetHistory.length - 2];
-            const side = hasLeft ? 'leftChildren' : 'rightChildren';
+            const child = hasLeft ? 'leftChildren' : 'rightChildren';
             if (targetParent.rightChildren == target) {
-                targetParent.rightChildren = target[side];
+                targetParent.rightChildren = target[child];
             } else {
                 // targetParent.leftChildren == target
-                targetParent.leftChildren = target[side];
+                targetParent.leftChildren = target[child];
             }
         } else {
             let max = target.leftChildren;
