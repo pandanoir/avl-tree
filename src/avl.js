@@ -1,3 +1,16 @@
+const balance = target => {
+    const balanceFactor = target.balanceFactor;
+    if (balanceFactor >= 2) {
+        if (target.leftChildren.balanceFactor < 0) target.leftChildren.leftRotate();
+        target.rightRotate();
+        return true;
+    } else if (-2 >= balanceFactor) {
+        if (target.rightChildren.balanceFactor > 0) target.rightChildren.rightRotate();
+        target.leftRotate();
+        return true;
+    }
+    return false;
+};
 export default class Node {
     constructor(val) {
         this.value = val;
@@ -29,36 +42,19 @@ export default class Node {
         const targetHistory = [this];
         let target = this;
         while (target != null) {
-            if (target.value > val) {
-                if (target.leftChildren === null) {
-                    const children = new Node(val);
-                    target.leftChildren = children;
-                    break;
-                }
-                target = target.leftChildren;
-            } else {
-                // target.value <= val
-                if (target.rightChildren === null) {
-                    const children = new Node(val);
-                    target.rightChildren = children;
-                    break;
-                }
-                target = target.rightChildren;
+            const side = target.value > val ? 'leftChildren' : 'rightChildren';
+            if (target[side] === null) {
+                const children = new Node(val);
+                target[side] = children;
+                break;
             }
+            target = target[side];
             targetHistory.push(target);
         }
         let balanceFactor = target.balanceFactor;
         while (target != null && balanceFactor != 0) {
-            balanceFactor = target.balanceFactor;
-            if (balanceFactor >= 2) {
-                if (target.leftChildren.balanceFactor < 0) target.leftChildren.leftRotate();
-                target.rightRotate();
-                break;
-            } else if (-2 >= balanceFactor) {
-                if (target.rightChildren.balanceFactor > 0) target.rightChildren.rightRotate();
-                target.leftRotate();
-                break;
-            }
+            const rotates = balance(target);
+            if (rotates) break;
             target = targetHistory.pop();
         }
     }
@@ -66,14 +62,9 @@ export default class Node {
         let target = this;
         const targetHistory = [this];
         while (target.value !== val) {
-            if (target.value > val) {
-                if (target.leftChildren !== null) target = target.leftChildren;
-                else return;
-            }
-            if (target.value < val) {
-                if (target.rightChildren !== null) target = target.rightChildren;
-                else return;
-            }
+            const side = target.value > val ? 'leftChildren' : 'rightChildren';
+            if (target[side] !== null) target = target[side];
+            else return;
             targetHistory.push(target);
         }
         const hasLeft = target.leftChildren != null;
@@ -82,24 +73,19 @@ export default class Node {
             const targetParent = targetHistory[targetHistory.length - 2];
             if (targetParent.rightChildren == target) {
                 targetParent.rightChildren = null;
-            } else if (targetParent.leftChildren == target) {
+            } else {
+                // targetParent.leftChildren == target
                 targetParent.leftChildren = null;
             }
         } else if (hasLeft != hasRight) {
             // hasLeft XOR hasRight
             const targetParent = targetHistory[targetHistory.length - 2];
-            if (hasLeft) {
-                if (targetParent.rightChildren == target) {
-                    targetParent.rightChildren = target.leftChildren;
-                } else if (targetParent.leftChildren == target) {
-                    targetParent.leftChildren = target.leftChildren;
-                }
+            const side = hasLeft ? 'leftChildren' : 'rightChildren';
+            if (targetParent.rightChildren == target) {
+                targetParent.rightChildren = target[side];
             } else {
-                if (targetParent.rightChildren == target) {
-                    targetParent.rightChildren = target.rightChildren;
-                } else if (targetParent.leftChildren == target) {
-                    targetParent.leftChildren = target.rightChildren;
-                }
+                // targetParent.leftChildren == target
+                targetParent.leftChildren = target[side];
             }
         } else {
             let max = target.leftChildren;
@@ -119,16 +105,7 @@ export default class Node {
         target = targetHistory.pop();
         let balanceFactor = target.balanceFactor;
         while (target != null && balanceFactor != 1 && balanceFactor != -1) {
-            balanceFactor = target.balanceFactor;
-            if (balanceFactor >= 2) {
-                if (target.leftChildren.balanceFactor < 0) target.leftChildren.leftRotate();
-                target.rightRotate();
-                break;
-            } else if (-2 >= balanceFactor) {
-                if (target.rightChildren.balanceFactor > 0) target.rightChildren.rightRotate();
-                target.leftRotate();
-                break;
-            }
+            balance(target);
             target = targetHistory.pop();
         }
     }
